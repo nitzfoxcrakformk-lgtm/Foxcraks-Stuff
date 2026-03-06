@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Foxcraks Stuff — Advanced</title>
+<link rel="icon" type="image/png" href="foxstufflogo.png">
+<style>
+:root{
+  --bg1:#3a000a; --bg2:#6b0017;
+  --accent1:#ff4d6d; --accent2:#ff758f;
+  --muted:rgba(255,255,255,0.72);
+  --panel-w:380px;
+  --card-radius:12px;
+  --shadow: 0 18px 50px rgba(0,0,0,0.6);
+  --owner-tab-size:54px; /* reducido un poco */
+  --scroll-panel-h:320px;
+  --safe-padding:20px;
+}
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 60%);
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+  padding:var(--safe-padding);
+  overflow:hidden;
+}
+
+/* Background visuals */
+.bg { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.bg .shape{ position:absolute; filter:blur(18px); opacity:.10; mix-blend-mode:screen; animation:ascend linear infinite; }
+.bg .square{ position:absolute; background: rgba(255,77,109,0.10); transform: rotate(10deg); filter: blur(6px); animation: ascendSquares linear infinite; mix-blend-mode: screen; }
+@keyframes ascend { 0%{ transform:translateY(120vh) rotate(0deg) scale(.9)} 100%{ transform:translateY(-40vh) rotate(360deg) scale(1.05)} }
+@keyframes ascendSquares { 0%{ transform:translateY(120vh) rotate(0deg) scale(.9); opacity:.08 } 50%{opacity:.12} 100%{ transform:translateY(-40vh) rotate(60deg) scale(1.05); opacity:.04 } }
+
+/* layout */
+.wrapper{ position:relative; z-index:2; width:100%; max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:18px; align-items:center; }
+.titleRow{ width:100%; display:flex; justify-content:flex-end; align-items:center; gap:12px; position:relative; }
+.title{ font-size:36px; font-weight:800; letter-spacing:-0.02em; text-align:center; background: linear-gradient(90deg,#fff,#ffd6dd); -webkit-background-clip:text; background-clip:text; color:transparent; position:absolute; left:50%; transform:translateX(-50%); z-index:3; text-shadow: 0 0 18px rgba(255,160,160,0.9); animation: titleGlow 3.6s ease-in-out infinite; }
+@keyframes titleGlow{
+  0%{ text-shadow: 0 0 8px rgba(255,120,140,0.6); transform:translateX(-50%) translateY(0); }
+  50%{ text-shadow: 0 0 26px rgba(255,180,200,0.95); transform:translateX(-50%) translateY(-2px); }
+  100%{ text-shadow: 0 0 8px rgba(255,120,140,0.6); transform:translateX(-50%) translateY(0); }
+}
+.topControls{ display:flex; gap:8px; align-items:center; z-index:4; }
+
+/* controls */
+.deviceBtn, .langSelect{ padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:#fff; cursor:pointer; transition: transform .22s cubic-bezier(.2,.9,.2,1), box-shadow .22s; }
+.deviceBtn.active{ background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021; border-color:rgba(255,255,255,0.06); box-shadow:0 10px 30px rgba(255,77,109,0.12); }
+.langSelect{ background:rgba(255,255,255,0.03); }
+
+/* main area */
+.mainArea{ width:100%; display:flex; gap:20px; align-items:stretch; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.002)); border-radius:var(--card-radius); padding:18px; box-shadow:var(--shadow); border:1px solid rgba(255,255,255,0.03); height:60vh; min-height:420px; transition:height .24s ease; }
+.leftCol{ width:320px; display:flex; flex-direction:column; gap:12px; align-items:stretch; position:relative; }
+.btn{ display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008)); color:#fff; font-weight:700; cursor:pointer; transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s, filter .18s; text-align:left; position:relative; overflow:hidden; }
+.btn.accent{ background: linear-gradient(90deg,var(--accent1),var(--accent2)); color:#021; box-shadow:0 8px 30px rgba(255,77,109,0.12); }
+.btn:active{ transform:translateY(-2px) scale(.995); }
+
+/* Button shine & animation */
+.btn::after{
+  content: '';
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+  transform: skewX(-18deg) translateX(0);
+  transition: transform .9s ease;
+  opacity: 0;
+  pointer-events:none;
+}
+.btn:hover{ transform: translateY(-6px) scale(1.03); box-shadow:0 26px 70px rgba(0,0,0,0.45); }
+.btn:hover::after{ transform: skewX(-18deg) translateX(220%); opacity:1; transition: transform .9s cubic-bezier(.2,.9,.2,1), opacity .18s; }
+
+/* right column image box */
+.rightCol{ flex:1; min-height:100%; display:flex; align-items:center; justify-content:center; position:relative; }
+.imageBox{ position:relative; width:100%; height:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02)); }
+.imageBox img{ width:100%; height:100%; object-fit:cover; display:block; transition: transform .45s ease; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.5)); }
+.imageBox:hover img{ transform: scale(1.02); }
+
+/* overlay controls (owner only) */
+.overlayControls{ position:absolute; top:12px; right:12px; display:flex; gap:8px; z-index:6; pointer-events:auto; }
+.iconBtn{ padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.45); color:#fff; border:1px solid rgba(255,255,255,0.04); cursor:pointer; font-size:13px; position:relative; overflow:hidden; transition: transform .18s; }
+.iconBtn:hover{ transform: translateY(-6px); box-shadow:0 12px 32px rgba(0,0,0,0.45); }
+
+/* side panel */
+.sidePanel{ position:fixed; right:calc(-1 * var(--panel-w)); top:0; height:100vh; width:var(--panel-w); background:linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.6)); box-shadow:-20px 0 40px rgba(0,0,0,0.6); z-index:65; transition:right .34s cubic-bezier(.2,.9,.2,1); padding:18px; overflow:auto; border-left:1px solid rgba(255,255,255,0.04); }
+.sidePanel.open{ right:0; }
+.sidePanel .closeBtn{ position:absolute; left:12px; top:12px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.03); color:#fff; border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+
+/* editable styles & handles */
+.editable{ position:relative; cursor:grab; user-select:none; }
+.editable.selected{ outline:2px dashed rgba(255,255,255,0.12); box-shadow:0 10px 30px rgba(0,0,0,0.6); cursor:grab; }
+.handle{ width:12px; height:12px; background:#fff; position:absolute; right:-6px; bottom:-6px; border-radius:3px; cursor:nwse-resize; box-shadow:0 6px 18px rgba(0,0,0,0.6); display:none; }
+.img-resize{ width:18px; height:18px; background:#fff; position:absolute; right:-9px; bottom:-9px; border-radius:4px; cursor:nwse-resize; box-shadow:0 8px 24px rgba(0,0,0,0.6); display:none; z-index:6; }
+
+/* small components */
+.welcomeBox{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; padding:18px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); width:100%;}
+.welcomeTitle{ font-size:20px; font-weight:800; }
+.welcomeDesc{ color:var(--muted); font-size:14px; }
+
+/* zone2 overlay */
+.zone2{ display:none; position:fixed; inset:0; z-index:80; background:rgba(0,0,0,0.6); padding:40px; overflow:auto; }
+.zone2 .panel{ max-width:1000px; margin:0 auto; background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.35)); padding:24px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); color:#fff;}
+.zone2.open{ display:block; }
+
+/* button extras */
+.btn .badge{ position:absolute; top:-8px; right:-8px; background:#021; color:#fff; border-radius:999px; padding:4px 7px; font-size:12px; font-weight:700; }
+.btn.morph{ border-radius:40px; transition:all .32s ease; transform-origin:center; }
+.btn.icon-anim::after{ content:""; width:12px; height:12px; border-radius:50%; background:linear-gradient(90deg,var(--accent1),var(--accent2)); position:absolute; left:10px; top:10px; animation:spin 1.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* appear anim */
+.appear-hidden{ opacity:0; transform: translateY(10px); transition: all .6s cubic-bezier(.2,.9,.2,1); }
+.appear-visible{ opacity:1; transform: translateY(0); }
+
+/* floating */
+.btn.floating{ position:fixed; right:18px; bottom:18px; z-index:90; box-shadow:0 30px 80px rgba(0,0,0,0.5); }
+
+/* ownerTab: dorado (gradiente) */
+.ownerTab{
+  position:fixed; right:12px; top:50%; transform:translateY(-50%); width:var(--owner-tab-size); height:var(--owner-tab-size);
+  border-radius:12px; background: linear-gradient(180deg,#ffd86b,#ffb84d); display:flex; align-items:center; justify-content:center;
+  box-shadow:0 12px 40px rgba(255,200,80,0.18), 0 6px 28px rgba(0,0,0,0.4); z-index:100; cursor:pointer; border:2px solid rgba(255,220,120,0.12);
+  transition: transform .24s ease, box-shadow .24s ease;
+}
+.ownerTab:hover{ transform:translateY(-50%) scale(1.04); box-shadow:0 18px 60px rgba(255,200,80,0.28); }
+.ownerTab svg{ filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); width:22px; height:22px; }
+.ownerTab .ring{ position:absolute; width:140%; height:140%; border-radius:999px; left:50%; top:50%; transform:translate(-50%,-50%); box-shadow:0 0 8px rgba(255,200,80,0.12); pointer-events:none; }
+
+/* modal */
+#globalModal{ display:none; position:fixed; inset:0; z-index:120; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); }
+#globalModal .modalBox{ width:clamp(300px,70vw,900px); background:#0b0b0b; padding:18px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); color:#fff;}
+#globalModal.show{ display:flex; }
+
+/* responsive */
+@media (max-width:980px){ .mainArea{ flex-direction:column; padding:14px; height:auto; min-height:420px; } .leftCol{ width:100%; } .rightCol{ width:100%; height:320px; } body{ padding:12px; } .ownerTab{ right:12px; bottom:12px; top:auto; transform:none; } }
+
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg" id="bg">
+  <div class="shape" style="left:12%; top:90%; width:200px; height:200px; border-radius:50%; background:#ff4d6d;"></div>
+  <div class="shape" style="left:40%; top:95%; width:160px; height:160px; border-radius:50%; background:#ff758f;"></div>
+  <div class="shape" style="left:72%; top:92%; width:220px; height:220px; border-radius:50%; background:#ff9b9b;"></div>
+</div>
+
+<!-- APP WRAPPER -->
+<div class="wrapper device-preview device-desktop" id="app">
+  <div class="titleRow">
+    <h1 class="title" data-i18n="title">Foxcrak´s Stuff</h1>
+    <div class="topControls">
+      <button class="deviceBtn" id="dev_auto" data-i18n="auto_btn">Auto</button>
+      <button class="deviceBtn" id="dev_desktop" data-device="desktop" data-i18n="desk_btn">Desk</button>
+      <button class="deviceBtn" id="dev_tablet" data-device="tablet" data-i18n="tab_btn">Tab</button>
+      <button class="deviceBtn" id="dev_mobile" data-device="mobile" data-i18n="mob_btn">Mob</button>
+      <select id="langSelect" class="langSelect" aria-label="Idioma">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mainArea" id="mainArea">
+    <div class="leftCol">
+      <div class="welcomeBox">
+        <div class="welcomeTitle" data-i18n="welcome_text">Bienvenido a Foxcrak´s Stuff</div>
+        <div class="welcomeDesc" data-i18n="welcome_desc">Pulsa "Entrar" para ir a la zona principal.</div>
+        <button class="btn accent" id="enterZoneBtn" data-i18n="enter_zone">Entrar</button>
+        <div style="height:8px"></div>
+        <div style="font-size:12px;color:var(--muted)">Owner: abre la pestaña lateral para opciones avanzadas.</div>
+      </div>
+    </div>
+
+    <div class="rightCol">
+      <div class="imageBox editable" id="imageBox">
+        <img id="mainImage" src="https://picsum.photos/1200/900" alt="Imagen derecha">
+        <div class="overlayControls" id="imageControls" style="display:none">
+          <label class="iconBtn" id="uploadLabel">Subir</label>
+          <button class="iconBtn" id="urlBtn">Usar URL</button>
+          <button class="iconBtn" id="fitBtn">Fit</button>
+          <button class="iconBtn" id="resetBtn">Reset</button>
+        </div>
+        <div class="img-resize" id="imgResize" title="Redimensionar imagen"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- zoneContainer (kept hidden; zones only managed from Owner panel) -->
+<div id="zoneContainer" style="display:none; position:relative; z-index:40; max-width:1200px; margin:18px auto;"></div>
+
+<!-- Hidden file input for images -->
+<input id="fileInput" type="file" accept="image/*" style="display:none">
+
+<!-- Owner tab (lateral dorado con estrella) -->
+<div class="ownerTab" id="ownerTab" title="Owner tools" aria-hidden="false" role="button" tabindex="0">
+  <div class="ring" aria-hidden="true"></div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 2.5l2.8 5.68 6.27.9-4.53 4.42 1.07 6.24L12 17.77l-5.62 2.97 1.07-6.24L2.92 9.08l6.27-.9L12 2.5z" fill="#ffffff"/>
+  </svg>
+</div>
+
+<!-- Side panel (Owner) -->
+<aside class="sidePanel" id="sidePanel" aria-hidden="true">
+  <button class="closeBtn" id="closePanel">Cerrar ✕</button>
+  <h3 data-i18n="owner_mode">Owner Mode — Herramientas</h3>
+  <div style="margin-top:8px;color:var(--muted)" data-i18n="owner_intro">Introduce contraseña al abrir (Owner).</div>
+
+  <hr style="margin:12px 0;border-color:rgba(255,255,255,0.04)"/>
+
+  <!-- CRUD básico: agregar textos/botones/imagenes (antiguo) -->
+  <div>
+    <h4>Crear elementos</h4>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="btn_create_text">Crear texto</button>
+      <button class="btn" id="btn_create_btn">Crear botón</button>
+      <button class="btn" id="btn_create_img">Crear imagen</button>
+    </div>
+
+    <!-- NUEVO: crear botón que vaya a zona -->
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <select id="createGotoZoneSelect" style="flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04)"></select>
+      <button class="btn" id="createGotoBtn">Crear botón → Zona</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" id="btn_duplicate">Duplicar</button>
+      <button class="btn" id="btn_delete">Borrar</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" id="btn_color">Cambiar color</button>
+      <button class="btn" id="btn_bg">Cambiar fondo</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn" id="btn_edit_text">Editar texto</button>
+      <button class="btn" id="btn_set_link">Establecer enlace</button>
+    </div>
+  </div>
+
+  <hr style="margin:12px 0;border-color:rgba(255,255,255,0.04)"/>
+
+  <!-- BUTTON SYSTEM CONFIG (dynamic when a button selected) -->
+  <div id="buttonSystemPanel">
+    <h4>Configuración botón avanzado</h4>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Selecciona un botón (Owner) para ver opciones.</div>
+
+    <div id="btnConfig" style="display:none;gap:8px;flex-direction:column">
+      <label>Tipo de acción:
+        <select id="btnActionType">
+          <option value="">Ninguna</option>
+          <option value="goto">Ir a zona</option>
+          <option value="modal">Abrir modal</option>
+          <option value="script">Ejecutar script</option>
+        </select>
+      </label>
+
+      <div id="gotoSettings" style="display:none">
+        <label>Zona destino:
+          <select id="gotoZoneSelect"></select>
+        </label>
+      </div>
+
+      <div id="modalSettings" style="display:none">
+        <label>Contenido modal (HTML):</label>
+        <textarea id="modalContent" style="width:100%;height:80px;background:#071; color:#fff;border-radius:6px;padding:8px"></textarea>
+      </div>
+
+      <div id="scriptSettings" style="display:none">
+        <label>Script JS (se ejecuta como Function):</label>
+        <textarea id="btnScript" style="width:100%;height:80px;background:#071; color:#fff;border-radius:6px;padding:8px"></textarea>
+      </div>
+
+      <label>Sonido (URL o dejar vacío): <input id="btnSound" placeholder="https://..."></label>
+      <label><input type="checkbox" id="btnHoverAnim"> Animación hover</label>
+      <label><input type="checkbox" id="btnIconAnim"> Icono animado</label>
+      <label><input type="checkbox" id="btnMorph"> Cambiar forma (morph)</label>
+      <label><input type="checkbox" id="btnCounter"> Contador de clicks</label>
+      <label><input type="checkbox" id="btnAppearScroll"> Aparecer al hacer scroll</label>
+      <label><input type="checkbox" id="btnFloating"> Botón flotante</label>
+
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn" id="applyBtnConfig">Aplicar</button>
+        <button class="btn" id="removeBtnConfig">Quitar comportamientos</button>
+      </div>
+    </div>
+  </div>
+
+  <hr style="margin:12px 0;border-color:rgba(255,255,255,0.04)"/>
+
+  <!-- ZONES MANAGER (solo Owner) -->
+  <div>
+    <h4>Gestión de Zonas / Páginas</h4>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn" id="createZoneBtn2">Crear zona</button>
+      <button class="btn" id="createPageBtn">Crear página interna</button>
+      <button class="btn" id="createSecretBtn">Crear página secreta</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn" id="showZonesMapBtn">Mapa navegación</button>
+      <button class="btn" id="toggleHorizontalBtn">Toggle scroll horiz.</button>
+    </div>
+    <div id="zonesList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+  </div>
+
+  <hr style="margin:12px 0;border-color:rgba(255,255,255,0.04)"/>
+
+  <!-- Save / load / import / export -->
+  <div>
+    <h4>Guardar / Cargar</h4>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="saveAllBtn">Guardar (owner)</button>
+      <button class="btn" id="loadAllBtn">Cargar</button>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+      <button class="btn" id="exportJsonBtn">Exportar JSON</button>
+      <button class="btn" id="importJsonBtn">Importar JSON</button>
+    </div>
+  </div>
+
+  <div style="margin-top:12px">
+    <label style="display:block;margin-bottom:8px;color:var(--muted)">Modo de vista:</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="deviceBtn" id="sp_dev_desktop">Desktop</button>
+      <button class="deviceBtn" id="sp_dev_tablet">Tablet</button>
+      <button class="deviceBtn" id="sp_dev_mobile">Mobile</button>
+      <label style="display:flex;align-items:center;gap:6px;color:var(--muted)"><input type="checkbox" id="sp_dev_auto" checked> <span data-i18n="auto_detect">Auto</span></label>
+    </div>
+  </div>
+
+  <div style="margin-top:12px">
+    <button id="btn_lock_owner" class="btn">Lock Owner</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">Contraseña: <strong>90018299</strong></div>
+  </div>
+</aside>
+
+<!-- Modal -->
+<div id="globalModal">
+  <div class="modalBox" id="modalBox">
+    <div id="modalContentInner"></div>
+    <div style="margin-top:12px;text-align:right">
+      <button class="btn" id="modalCloseBtn">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- zone2 overlay -->
+<div class="zone2" id="zone2">
+  <div class="panel">
+    <h2 data-i18n="zone2_title">Zona 2</h2>
+    <p data-i18n="zone2_desc">Zona secundaria</p>
+    <div style="height:12px"></div>
+    <button class="btn" id="zone2Back" data-i18n="back_btn">Volver</button>
+    <div style="height:18px"></div>
+    <div id="zoneContainerInner"></div>
+  </div>
+</div>
+
+<script>
+/* ===========
+   CONFIG & STORAGE
+   =========== */
+const STORAGE_KEY = 'fox_state_v3';
+const IMAGE_KEY = 'foximg1';
+const OWNER_PASSWORD = '90018299';
+
+/* i18n subset */
+const i18n = {
+  es: {
+    title: "Foxcrak´s Stuff",
+    welcome_text: "Bienvenido a Foxcrak´s Stuff",
+    welcome_desc: "Aquí puedes gestionar herramientas, vistas y editar la página (modo Owner).",
+    enter_zone: "Entrar", back_btn: "Volver", zone2_title: "Zona 2", zone2_desc: "Zona secundaria.",
+    auto_btn: "Auto", desk_btn: "Desk", tab_btn: "Tab", mob_btn: "Mob",
+    owner_mode:"Owner Mode — Herramientas", owner_intro:"Introduce contraseña al abrir (Owner).", auto_detect:"Auto"
+  },
+  en: {
+    title: "Foxcrak´s Stuff",
+    welcome_text: "Welcome to Foxcrak´s Stuff",
+    welcome_desc: "Here you can manage tools, previews and edit the page (Owner mode).",
+    enter_zone: "Enter", back_btn: "Back", zone2_title:"Zone 2", zone2_desc:"Secondary area.",
+    auto_btn:"Auto", desk_btn:"Desk", tab_btn:"Tab", mob_btn:"Mob",
+    owner_mode:"Owner Mode — Tools", owner_intro:"Enter password to open (Owner).", auto_detect:"Auto"
+  }
+};
+let currentLang = localStorage.getItem('fox_lang') || 'es';
+function translatePage(lang){ currentLang = lang; localStorage.setItem('fox_lang', lang); document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(!k) return; el.innerText = (i18n[lang] && i18n[lang][k]) || k; }); }
+document.getElementById('langSelect').value = currentLang; translatePage(currentLang);
+document.getElementById('langSelect').addEventListener('change',(e)=> translatePage(e.target.value));
+
+/* references */
+const mainArea = document.getElementById('mainArea');
+const mainImage = document.getElementById('mainImage');
+const fileInput = document.getElementById('fileInput');
+const imageControls = document.getElementById('imageControls');
+const uploadLabel = document.getElementById('uploadLabel');
+const zoneContainer = document.getElementById('zoneContainer');
+
+/* ===========
+   PERSISTENCE
+   =========== */
+function saveState(){
+  try{
+    const zonesMeta = (window.zones||[]).map((z,i)=>({
+      id:z.id, title:z.title, hidden: !!z.hidden, horizontal: !!z.horizontal, secret: !!z.secret, order: i, contentHTML: z.contentHTML || ''
+    }));
+    const payload = {
+      html: mainArea.innerHTML,
+      zones: zonesMeta,
+      image: localStorage.getItem(IMAGE_KEY) || mainImage.src,
+      ts: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }catch(e){ console.error('saveState error', e); }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const obj = JSON.parse(raw);
+    if(obj.html) mainArea.innerHTML = obj.html;
+    if(obj.image){ mainImage.src = obj.image; localStorage.setItem(IMAGE_KEY, obj.image); }
+    if(Array.isArray(obj.zones)) rebuildZonesFromMetadata(obj.zones);
+    enhanceAll();
+    rewireAllButtons();
+    setupAppearOnScrollObserver();
+    populateAllZoneSelectors();
+    return true;
+  }catch(e){ console.error('loadState', e); return false; }
+}
+
+/* auto-save on mutations (debounced) */
+const mo = new MutationObserver(()=>{ clearTimeout(window.__saveDeb); window.__saveDeb = setTimeout(()=>saveState(), 450); });
+mo.observe(mainArea, {childList:true, subtree:true, attributes:true, characterData:true});
+
+/* load persistent image */
+(function(){ const stored = localStorage.getItem(IMAGE_KEY); if(stored) mainImage.src = stored; })();
+
+/* ===========
+   OWNER AUTH & PANEL
+   =========== */
+const sidePanel = document.getElementById('sidePanel');
+const ownerTab = document.getElementById('ownerTab');
+let ownerMode = localStorage.getItem('foxcrak_owner_auth') === '1';
+function openSide(){ sidePanel.classList.add('open'); ownerTab.classList.add('active'); }
+function closeSide(){ sidePanel.classList.remove('open'); ownerTab.classList.remove('active'); }
+function ownerAuthenticated(){ ownerMode = true; localStorage.setItem('foxcrak_owner_auth','1'); imageControls.style.display='flex'; enhanceAll(); openSide(); alert((currentLang==='es')? 'Owner Mode activado':'Owner Mode activated'); }
+ownerTab.addEventListener('click', ()=>{
+  if(ownerMode){ if(sidePanel.classList.contains('open')) closeSide(); else openSide(); return; }
+  const pass = prompt((currentLang==='es')? 'Contraseña Owner:':'Owner password:');
+  if(pass === OWNER_PASSWORD) ownerAuthenticated(); else alert((currentLang==='es')? 'Contraseña incorrecta':'Wrong password');
+});
+document.getElementById('closePanel').addEventListener('click', closeSide);
+const lockBtn = document.getElementById('btn_lock_owner');
+if(lockBtn) lockBtn.addEventListener('click', ()=>{ ownerMode = false; localStorage.removeItem('foxcrak_owner_auth'); imageControls.style.display='none'; closeSide(); alert((currentLang==='es')? 'Owner sesión cerrada':'Owner session closed'); });
+
+/* ===========
+   EDITABLE SYSTEM (drag/resize/dblclick edit)
+   =========== */
+let activeEl = null, isDragging=false, dragOffset={x:0,y:0}, isResizing=false, startSize={}, isImgResizing=false, imgStart={};
+
+function makeEditable(el){
+  if(!el) return; if(el.dataset.enhanced) return; el.dataset.enhanced='1';
+  if(!el.querySelector('.handle')){
+    const handle = document.createElement('div'); handle.className='handle'; handle.style.display='none'; el.appendChild(handle);
+    handle.addEventListener('pointerdown', (ev)=>{ if(!ownerMode) return; ev.stopPropagation(); ev.preventDefault(); isResizing=true; activeEl=el; startSize.w=el.offsetWidth; startSize.h=el.offsetHeight; startSize.mouseX=ev.clientX; startSize.mouseY=ev.clientY; document.body.style.cursor='nwse-resize'; });
+  }
+  el.addEventListener('pointerdown', (e)=>{ if(!ownerMode) return; if(e.target.closest('.iconBtn')) return; if(e.target.classList.contains('handle') || e.target.classList.contains('img-resize')) return; e.stopPropagation(); selectElement(el); if(e.button===0){ isDragging=true; const rect=el.getBoundingClientRect(), areaRect=mainArea.getBoundingClientRect(); if(getComputedStyle(el).position!=='absolute'){ el.style.position='absolute'; el.style.left = (rect.left - areaRect.left)+'px'; el.style.top = (rect.top - areaRect.top)+'px'; } dragOffset.x = e.clientX - el.getBoundingClientRect().left; dragOffset.y = e.clientY - el.getBoundingClientRect().top; el.style.zIndex = 999; } });
+  el.addEventListener('dblclick', (e)=>{ if(!ownerMode) return; if(el.tagName === 'DIV' || el.tagName === 'BUTTON'){ el.contentEditable = true; el.focus(); const onBlur = ()=>{ el.contentEditable=false; el.removeEventListener('blur', onBlur); saveState(); }; el.addEventListener('blur', onBlur); } });
+}
+
+function selectElement(el){
+  if(activeEl && activeEl!==el) deselectElement(activeEl);
+  activeEl = el;
+  document.querySelectorAll('.editable').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  document.querySelectorAll('.handle').forEach(h=>h.style.display='none');
+  const h = el.querySelector('.handle'); if(h) h.style.display = ownerMode ? 'block' : 'none';
+  refreshButtonConfigUI();
+}
+function deselectElement(el){ if(!el) return; el.classList.remove('selected'); activeEl=null; document.querySelectorAll('.handle').forEach(h=>h.style.display='none'); refreshButtonConfigUI(); }
+
+document.addEventListener('pointermove', (e)=>{
+  if(isResizing && activeEl){ const dx = e.clientX - startSize.mouseX, dy = e.clientY - startSize.mouseY; activeEl.style.width = Math.max(30, startSize.w + dx) + 'px'; activeEl.style.height = Math.max(20, startSize.h + dy) + 'px'; return; }
+  if(isImgResizing){ const box = document.getElementById('imageBox'); const dx = e.clientX - imgStart.mouseX, dy = e.clientY - imgStart.mouseY; box.style.width = Math.max(200, imgStart.w + dx) + 'px'; box.style.height = Math.max(120, imgStart.h + dy) + 'px'; return; }
+  if(isDragging && activeEl){ const areaRect = mainArea.getBoundingClientRect(); let nx = e.clientX - areaRect.left - dragOffset.x; let ny = e.clientY - areaRect.top - dragOffset.y; nx = Math.max(0, Math.min(nx, areaRect.width - (activeEl.offsetWidth||80))); ny = Math.max(0, Math.min(ny, areaRect.height - (activeEl.offsetHeight||30))); activeEl.style.left = Math.round(nx/8)*8 + 'px'; activeEl.style.top = Math.round(ny/8)*8 + 'px'; return; }
+});
+document.addEventListener('pointerup', (e)=>{ if(isDragging||isResizing||isImgResizing){ isDragging=false; isResizing=false; isImgResizing=false; document.body.style.cursor=''; if(activeEl) activeEl.style.zIndex=''; saveState(); } });
+document.addEventListener('pointerdown', (e)=>{ if(!ownerMode) return; if(!e.target.closest('.editable') && !e.target.closest('.sidePanel') && !e.target.closest('.ownerTab') && !e.target.closest('.scrollPanel')){ document.querySelectorAll('.editable').forEach(x=>x.classList.remove('selected')); document.querySelectorAll('.handle').forEach(h=>h.style.display='none'); activeEl=null; refreshButtonConfigUI(); } });
+
+const imgResize = document.getElementById('imgResize');
+if(imgResize) imgResize.addEventListener('pointerdown', (e)=>{ if(!ownerMode) return; e.stopPropagation(); e.preventDefault(); isImgResizing=true; const box=document.getElementById('imageBox'); imgStart.w=box.offsetWidth; imgStart.h=box.offsetHeight; imgStart.mouseX=e.clientX; imgStart.mouseY=e.clientY; document.body.style.cursor='nwse-resize'; });
+const imageBoxEl = document.getElementById('imageBox');
+if(imageBoxEl) imageBoxEl.addEventListener('pointerdown', (e)=>{ if(!ownerMode) return; selectElement(document.getElementById('imageBox')); });
+
+/* initial enhance helper */
+function enhanceAll(){ document.querySelectorAll('#mainArea .editable').forEach(makeEditable); document.querySelectorAll('#mainArea button').forEach(b=>{ if(!b.dataset.enhancedBtnHandler){ b.addEventListener('click', btnLinkHandler); b.dataset.enhancedBtnHandler='1'; } makeEditable(b); }); }
+enhanceAll();
+
+/* ===========
+   BUTTON ACTIONS + REWIRE
+   =========== */
+function btnLinkHandler(e){
+  const el = e.currentTarget;
+  if(ownerMode && activeEl===el){ e.stopPropagation(); return; }
+  if(el.dataset.sound){ try{ const a = new Audio(el.dataset.sound); a.play().catch(()=>{}); }catch(err){} }
+  if(el.dataset.counter){
+    const count = parseInt(el.dataset.counter)||0; const newc = count+1; el.dataset.counter = newc; let badge = el.querySelector('.badge'); if(!badge){ badge = document.createElement('span'); badge.className='badge'; el.appendChild(badge); } badge.innerText = newc; saveState();
+  }
+  const action = el.dataset.action;
+  if(action === 'goto' && el.dataset.target) navigateToZone(el.dataset.target);
+  else if(action === 'modal' && el.dataset.modal) openGlobalModal(el.dataset.modal);
+  else if(action === 'script' && el.dataset.script){
+    try{ new Function(el.dataset.script)(); }catch(err){ console.error('script error', err); alert('Error ejecutando script (ver consola)'); }
+  } else if(el.dataset.link){ window.open(el.dataset.link,'_blank'); }
+}
+function rewireAllButtons(){ document.querySelectorAll('#mainArea button').forEach(b=>{ b.removeEventListener('click', btnLinkHandler); b.addEventListener('click', btnLinkHandler); if(!b.dataset.enhancedBtnHandler) b.dataset.enhancedBtnHandler='1'; }); }
+
+/* ===========
+   MODAL
+   =========== */
+const globalModal = document.getElementById('globalModal');
+const modalContentInner = document.getElementById('modalContentInner');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+if(modalCloseBtn) modalCloseBtn.addEventListener('click', ()=> closeGlobalModal());
+function openGlobalModal(html){ modalContentInner.innerHTML = html || '<div>Empty</div>'; globalModal.classList.add('show'); globalModal.style.display='flex'; }
+function closeGlobalModal(){ globalModal.classList.remove('show'); globalModal.style.display='none'; modalContentInner.innerHTML = ''; }
+
+/* ===========
+   APPEAR ON SCROLL (IntersectionObserver)
+   =========== */
+let appearObserver = null;
+function setupAppearOnScrollObserver(){
+  if(appearObserver) appearObserver.disconnect();
+  appearObserver = new IntersectionObserver(entries=>{ entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.remove('appear-hidden'); en.target.classList.add('appear-visible'); } }); }, {threshold:0.2});
+  document.querySelectorAll('[data-appear="true"]').forEach(el=>{ el.classList.add('appear-hidden'); appearObserver.observe(el); });
+}
+
+/* ===========
+   ZONES / PAGES SYSTEM (owner-only controls)
+   =========== */
+let zones = []; // {id,title,hidden,horizontal,secret,order,contentHTML}
+const zonesListEl = document.getElementById('zonesList');
+const createGotoZoneSelect = document.getElementById('createGotoZoneSelect');
+
+function createZone(title){
+  const id = 'zone-' + Date.now() + '-' + Math.round(Math.random()*999);
+  const zobj = { id, title: title||('Zona '+(zones.length+1)), hidden:false, horizontal:false, secret:false, order: zones.length, contentHTML: `<div style="padding:12px;color:var(--muted)">${title||id}</div>` };
+  zones.push(zobj);
+  renderZonesList(); populateAllZoneSelectors(); saveState();
+  return id;
+}
+function createPage(title){ const id = createZone(title||'Página interna'); const z = zones.find(x=>x.id===id); if(z) z.isPage = true; saveState(); return id; }
+function createSecretPage(title, password){ const id = createZone(title||'Página secreta'); const z = zones.find(x=>x.id===id); if(z){ z.secret=true; z.secretPass = password || ('p'+Math.round(Math.random()*9999)); } renderZonesList(); populateAllZoneSelectors(); saveState(); return id; }
+function renderZonesList(){
+  zonesListEl.innerHTML = '';
+  zones.sort((a,b)=> (a.order||0) - (b.order||0)).forEach((z, idx)=>{
+    const row = document.createElement('div'); row.style.display='flex'; row.style.gap='6px'; row.style.alignItems='center';
+    const title = document.createElement('div'); title.innerText = z.title; title.style.flex='1';
+    const btnGoto = document.createElement('button'); btnGoto.className='btn'; btnGoto.innerText='Ir'; btnGoto.onclick = ()=> navigateToZone(z.id);
+    const btnHide = document.createElement('button'); btnHide.className='btn'; btnHide.innerText = z.hidden ? 'Mostrar' : 'Ocultar'; btnHide.onclick = ()=>{ z.hidden=!z.hidden; saveState(); renderZonesList(); };
+    const up = document.createElement('button'); up.className='btn'; up.innerText='▲'; up.onclick = ()=>{ moveZoneUp(z.id); };
+    const down = document.createElement('button'); down.className='btn'; down.innerText='▼'; down.onclick = ()=>{ moveZoneDown(z.id); };
+    const btnEdit = document.createElement('button'); btnEdit.className='btn'; btnEdit.innerText='Editar'; btnEdit.onclick = ()=>{ const n = prompt('Nuevo título', z.title); if(n!==null){ z.title=n; saveState(); renderZonesList(); populateAllZoneSelectors(); } };
+    row.appendChild(title); row.appendChild(btnGoto); row.appendChild(btnHide); row.appendChild(up); row.appendChild(down); row.appendChild(btnEdit);
+    zonesListEl.appendChild(row);
+  });
+}
+function rebuildZonesFromMetadata(meta){
+  zones = meta.map(m=>({ id:m.id, title:m.title || m.id, hidden:!!m.hidden, horizontal:!!m.horizontal, secret:!!m.secret, order:m.order||0, contentHTML: m.contentHTML || (`<div style="padding:12px;color:var(--muted)">${m.title||m.id}</div>`) }));
+  renderZonesList();
+}
+function moveZoneUp(id){ const idx=zones.findIndex(x=>x.id===id); if(idx<=0) return; const tmp=zones[idx-1]; zones[idx-1]=zones[idx]; zones[idx]=tmp; zones.forEach((z,i)=>z.order=i); renderZonesList(); populateAllZoneSelectors(); saveState(); }
+function moveZoneDown(id){ const idx=zones.findIndex(x=>x.id===id); if(idx<0||idx===zones.length-1) return; const tmp=zones[idx+1]; zones[idx+1]=zones[idx]; zones[idx]=tmp; zones.forEach((z,i)=>z.order=i); renderZonesList(); populateAllZoneSelectors(); saveState(); }
+
+function navigateToZone(id){
+  const z = zones.find(x=>x.id===id);
+  if(!z){ alert((currentLang==='es')? 'Zona no encontrada':'Zone not found'); return; }
+  if(z.secret){
+    const pass = prompt((currentLang==='es')? 'Introduce contraseña para la página secreta':'Enter password for secret page:');
+    if(pass !== z.secretPass){ alert((currentLang==='es')? 'Contraseña incorrecta':'Wrong password'); return; }
+  }
+  const overlay = document.getElementById('zone2');
+  const container = document.getElementById('zoneContainerInner');
+  container.innerHTML = z.contentHTML || `<div>${z.title}</div>`;
+  overlay.classList.add('open');
+}
+
+/* populate selectors that let you choose a zone for goto actions */
+function populateAllZoneSelectors(){
+  // gotoZoneSelect inside button config
+  const gotoZoneSelect = document.getElementById('gotoZoneSelect');
+  if(gotoZoneSelect){
+    gotoZoneSelect.innerHTML = '<option value="">-- elegir zona --</option>';
+    zones.forEach(z => { const o=document.createElement('option'); o.value=z.id; o.innerText=z.title; gotoZoneSelect.appendChild(o); });
+  }
+  // select used by quick-create button -> zone
+  if(createGotoZoneSelect){
+    createGotoZoneSelect.innerHTML = '<option value="">-- elegir zona --</option>';
+    zones.forEach(z => { const o=document.createElement('option'); o.value=z.id; o.innerText=z.title; createGotoZoneSelect.appendChild(o); });
+  }
+  // any other selects that depend on zones can be updated here
+}
+
+/* UI hooks for zone creation (owner) - only attach if elements exist */
+const createZoneBtn2 = document.getElementById('createZoneBtn2');
+if(createZoneBtn2) createZoneBtn2.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); const t = prompt('Título zona:','Nueva zona'); if(t!==null) createZone(t); });
+
+const createPageBtn = document.getElementById('createPageBtn');
+if(createPageBtn) createPageBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); const t = prompt('Título página interna:','Página interna'); if(t!==null) createPage(t); });
+
+const createSecretBtn = document.getElementById('createSecretBtn');
+if(createSecretBtn) createSecretBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); const t = prompt('Título página secreta:','Página secreta'); const p = prompt('Contraseña para la página:','1234'); if(t!==null && p!==null) createSecretPage(t,p); });
+
+const showZonesMapBtn = document.getElementById('showZonesMapBtn');
+if(showZonesMapBtn) showZonesMapBtn.addEventListener('click', ()=>{ if(zones.length===0) return alert((currentLang==='es')? 'No hay zonas':'No zones'); alert('Mapa de navegación:\n' + zones.map(z=>`${z.title} (${z.id}) ${z.secret?'[secreta]':''}`).join('\n')); });
+
+const toggleHorizontalBtn = document.getElementById('toggleHorizontalBtn');
+if(toggleHorizontalBtn) toggleHorizontalBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); alert('Toggle scroll horizontal en zonas (puedes marcar zonas manualmente)'); });
+
+/* ===========
+   BUTTON CONFIG UI (side panel wiring)
+   =========== */
+const btnConfig = document.getElementById('btnConfig');
+const btnActionType = document.getElementById('btnActionType');
+const gotoSettings = document.getElementById('gotoSettings');
+const gotoZoneSelect = document.getElementById('gotoZoneSelect');
+const modalSettings = document.getElementById('modalSettings');
+const modalContent = document.getElementById('modalContent');
+const scriptSettings = document.getElementById('scriptSettings');
+const btnScript = document.getElementById('btnScript');
+const btnSound = document.getElementById('btnSound');
+const btnHoverAnim = document.getElementById('btnHoverAnim');
+const btnIconAnim = document.getElementById('btnIconAnim');
+const btnMorph = document.getElementById('btnMorph');
+const btnCounter = document.getElementById('btnCounter');
+const btnAppearScroll = document.getElementById('btnAppearScroll');
+const btnFloating = document.getElementById('btnFloating');
+const applyBtnConfig = document.getElementById('applyBtnConfig');
+const removeBtnConfig = document.getElementById('removeBtnConfig');
+
+function refreshButtonConfigUI(){
+  if(!activeEl || activeEl.tagName !== 'BUTTON'){ if(btnConfig) btnConfig.style.display='none'; return; }
+  if(btnConfig) btnConfig.style.display='flex';
+  btnActionType.value = activeEl.dataset.action || '';
+  if(activeEl.dataset.action === 'goto'){ gotoSettings.style.display='block'; modalSettings.style.display='none'; scriptSettings.style.display='none'; }
+  else if(activeEl.dataset.action === 'modal'){ gotoSettings.style.display='none'; modalSettings.style.display='block'; scriptSettings.style.display='none'; }
+  else if(activeEl.dataset.action === 'script'){ gotoSettings.style.display='none'; modalSettings.style.display='none'; scriptSettings.style.display='block'; }
+  else { gotoSettings.style.display='none'; modalSettings.style.display='none'; scriptSettings.style.display='none'; }
+  populateAllZoneSelectors(); gotoZoneSelect.value = activeEl.dataset.target || '';
+  modalContent.value = activeEl.dataset.modal || '';
+  btnScript.value = activeEl.dataset.script || '';
+  btnSound.value = activeEl.dataset.sound || '';
+  btnHoverAnim.checked = activeEl.dataset.hover === 'true';
+  btnIconAnim.checked = activeEl.dataset.iconanim === 'true';
+  btnMorph.checked = activeEl.dataset.morph === 'true';
+  btnCounter.checked = activeEl.dataset.counter === 'true' || !!activeEl.dataset.counter;
+  btnAppearScroll.checked = activeEl.dataset.appear === 'true';
+  btnFloating.checked = activeEl.dataset.floating === 'true';
+}
+if(btnActionType) btnActionType.addEventListener('change', (e)=>{ const v=e.target.value; gotoSettings.style.display = v==='goto' ? 'block':'none'; modalSettings.style.display = v==='modal' ? 'block':'none'; scriptSettings.style.display = v==='script' ? 'block':'none'; });
+
+if(applyBtnConfig) applyBtnConfig.addEventListener('click', ()=>{
+  if(!activeEl || activeEl.tagName !== 'BUTTON') return alert('Selecciona un botón');
+  const action = btnActionType.value;
+  if(action) activeEl.dataset.action = action; else delete activeEl.dataset.action;
+  if(action === 'goto' && gotoZoneSelect.value) activeEl.dataset.target = gotoZoneSelect.value; else delete activeEl.dataset.target;
+  if(action === 'modal' && modalContent.value) activeEl.dataset.modal = modalContent.value; else delete activeEl.dataset.modal;
+  if(action === 'script' && btnScript.value) activeEl.dataset.script = btnScript.value; else delete activeEl.dataset.script;
+  if(btnSound.value) activeEl.dataset.sound = btnSound.value; else delete activeEl.dataset.sound;
+  activeEl.dataset.hover = btnHoverAnim.checked ? 'true' : 'false';
+  activeEl.dataset.iconanim = btnIconAnim.checked ? 'true' : 'false';
+  activeEl.dataset.morph = btnMorph.checked ? 'true' : 'false';
+  activeEl.dataset.counter = btnCounter.checked ? (parseInt(activeEl.dataset.counter)||0) : '';
+  activeEl.dataset.appear = btnAppearScroll.checked ? 'true' : 'false';
+  activeEl.dataset.floating = btnFloating.checked ? 'true' : 'false';
+  if(activeEl.dataset.iconanim === 'true') activeEl.classList.add('icon-anim'); else activeEl.classList.remove('icon-anim');
+  if(activeEl.dataset.morph === 'true') activeEl.classList.add('morph'); else activeEl.classList.remove('morph');
+  if(activeEl.dataset.floating === 'true') activeEl.classList.add('floating'); else activeEl.classList.remove('floating');
+  if(activeEl.dataset.appear === 'true') activeEl.setAttribute('data-appear','true'); else activeEl.removeAttribute('data-appear');
+  if(btnCounter.checked){ const count = parseInt(activeEl.dataset.counter)||0; activeEl.dataset.counter=count; let badge = activeEl.querySelector('.badge'); if(!badge){ badge=document.createElement('span'); badge.className='badge'; activeEl.appendChild(badge); } badge.innerText=count; } else { delete activeEl.dataset.counter; const badge = activeEl.querySelector('.badge'); if(badge) badge.remove(); }
+  rewireAllButtons(); setupAppearOnScrollObserver(); saveState(); alert('Configuración aplicada');
+});
+
+if(removeBtnConfig) removeBtnConfig.addEventListener('click', ()=>{ if(!activeEl || activeEl.tagName !== 'BUTTON') return alert('Selecciona un botón'); ['action','target','modal','script','sound','hover','iconanim','morph','counter','appear','floating','link'].forEach(k=>delete activeEl.dataset[k]); activeEl.classList.remove('icon-anim','morph','floating'); const badge = activeEl.querySelector('.badge'); if(badge) badge.remove(); saveState(); alert('Comportamientos eliminados'); refreshButtonConfigUI(); });
+
+/* ===========
+   CRUD básico (crear texto, botón, imagen, duplicar, borrar, color, bg, editar, set link)
+   =========== */
+function ensureOwner(){ if(!ownerMode) throw new Error('Activa Owner Mode'); }
+
+const btnCreateText = document.getElementById('btn_create_text');
+if(btnCreateText) btnCreateText.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } const t=document.createElement('div'); t.className='editable'; t.innerText = (currentLang==='es')? 'Nuevo Texto':'New Text'; t.style.position='absolute'; t.style.left='20px'; t.style.top='20px'; t.style.padding='8px 10px'; t.style.background='transparent'; mainArea.appendChild(t); makeEditable(t); selectElement(t); saveState(); });
+
+const btnCreateBtn = document.getElementById('btn_create_btn');
+if(btnCreateBtn) btnCreateBtn.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } const b=document.createElement('button'); b.className='btn editable'; b.innerText = (currentLang==='es')? 'Nuevo Botón':'New Button'; b.style.position='absolute'; b.style.left='20px'; b.style.top='80px'; mainArea.appendChild(b); makeEditable(b); b.addEventListener('click', btnLinkHandler); selectElement(b); saveState(); });
+
+const btnCreateImg = document.getElementById('btn_create_img');
+if(btnCreateImg) btnCreateImg.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } fileInput.onchange = (ev)=>{ const f = ev.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ const im = document.createElement('img'); im.className='editable'; im.src = reader.result; im.style.width='300px'; im.style.height='180px'; im.style.objectFit='cover'; im.style.position='absolute'; im.style.left='20px'; im.style.top='140px'; mainArea.appendChild(im); makeEditable(im); selectElement(im); saveState(); fileInput.value=''; }; reader.readAsDataURL(f); }; fileInput.click(); });
+
+/* NUEVO: crear botón que vaya a una zona seleccionada (quick) */
+const createGotoBtn = document.getElementById('createGotoBtn');
+if(createGotoBtn){
+  createGotoBtn.addEventListener('click', ()=>{
+    try{ ensureOwner(); }catch(e){ return alert(e.message); }
+    const zoneId = createGotoZoneSelect.value;
+    if(!zoneId) return alert((currentLang==='es')? 'Selecciona una zona':'Select a zone');
+    const z = zones.find(x=>x.id===zoneId);
+    const b = document.createElement('button');
+    b.className = 'btn editable';
+    b.innerText = (currentLang==='es')? (`Ir a ${z.title}`) : (`Go to ${z.title}`);
+    b.style.position='absolute'; b.style.left='20px'; b.style.top='120px';
+    b.dataset.action = 'goto'; b.dataset.target = zoneId;
+    mainArea.appendChild(b); makeEditable(b); b.addEventListener('click', btnLinkHandler);
+    selectElement(b); saveState();
+    alert((currentLang==='es')? 'Botón creado y vinculado a la zona':'Button created and linked to zone');
+  });
+}
+
+const btnDuplicate = document.getElementById('btn_duplicate');
+if(btnDuplicate) btnDuplicate.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); const clone = activeEl.cloneNode(true); clone.id = (activeEl.id||'') + '_copy_' + Math.round(Math.random()*9999); clone.style.left = (parseInt(activeEl.style.left||20)+30) + 'px'; clone.style.top = (parseInt(activeEl.style.top||20)+30) + 'px'; mainArea.appendChild(clone); makeEditable(clone); if(clone.tagName==='BUTTON') clone.addEventListener('click', btnLinkHandler); selectElement(clone); saveState(); });
+
+const btnDelete = document.getElementById('btn_delete');
+if(btnDelete) btnDelete.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); if(confirm((currentLang==='es')? 'Borrar elemento seleccionado?':'Delete selected element?')){ activeEl.remove(); activeEl=null; saveState(); } });
+
+const btnColor = document.getElementById('btn_color');
+if(btnColor) btnColor.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); const col = prompt((currentLang==='es')? 'Color CSS (hex o nombre), ej: #ff4d6d o red':'CSS color (hex or name), e.g. #ff4d6d or red', activeEl.style.color || '#fff'); if(col){ activeEl.style.color = col; saveState(); } });
+
+const btnBg = document.getElementById('btn_bg');
+if(btnBg) btnBg.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); const bgc = prompt((currentLang==='es')? 'Fondo CSS (ej: rgba(255,255,255,0.06) o #fff)':'CSS background (e.g. rgba(255,255,255,0.06) or #fff)', activeEl.style.background || ''); if(bgc){ activeEl.style.background = bgc; saveState(); } });
+
+const btnEditText = document.getElementById('btn_edit_text');
+if(btnEditText) btnEditText.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); const txt = prompt((currentLang==='es')? 'Editar texto/HTML':'Edit text/HTML', activeEl.innerText); if(txt !== null){ activeEl.innerText = txt; saveState(); } });
+
+const btnSetLink = document.getElementById('btn_set_link');
+if(btnSetLink) btnSetLink.addEventListener('click', ()=>{ try{ ensureOwner(); }catch(e){ return alert(e.message); } if(!activeEl) return alert((currentLang==='es')? 'Selecciona un elemento':'Select an element'); if(activeEl.tagName !== 'BUTTON') return alert((currentLang==='es')? 'Selecciona un botón':'Select a button'); const url = prompt((currentLang==='es')? 'URL destino (deja en blanco para quitar):':'Destination URL (leave blank to remove):', activeEl.dataset.link || ''); if(url){ activeEl.dataset.link = url; activeEl.removeEventListener('click', btnLinkHandler); activeEl.addEventListener('click', ()=>window.open(url,'_blank')); } else { delete activeEl.dataset.link; activeEl.removeEventListener('click', btnLinkHandler); } saveState(); });
+
+/* ===========
+   IMAGE persistence (foximg1) - upload & url
+   =========== */
+fileInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ try{ localStorage.setItem(IMAGE_KEY, reader.result); }catch(err){ console.warn('image store failed', err); } mainImage.src = reader.result; saveState(); };
+  reader.readAsDataURL(f);
+});
+if(uploadLabel) uploadLabel.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); fileInput.click(); });
+const urlBtn = document.getElementById('urlBtn');
+if(urlBtn) urlBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); const url = prompt('Pega la URL de la imagen:'); if(url && /^https?:\/\//i.test(url)){ mainImage.src = url; localStorage.setItem(IMAGE_KEY, url); saveState(); } else if(url) alert('URL inválida'); });
+const fitBtn = document.getElementById('fitBtn');
+if(fitBtn) fitBtn.addEventListener('click', ()=>{ const cur = mainImage.style.objectFit || 'cover'; mainImage.style.objectFit = cur === 'cover' ? 'contain' : 'cover'; saveState(); });
+const resetBtn = document.getElementById('resetBtn');
+if(resetBtn) resetBtn.addEventListener('click', ()=>{ mainImage.src = 'https://picsum.photos/1200/900'; localStorage.removeItem(IMAGE_KEY); saveState(); });
+
+/* ===========
+   Export / Import / Save load UI (owner)
+   =========== */
+const exportJsonBtn = document.getElementById('exportJsonBtn'); if(exportJsonBtn) exportJsonBtn.addEventListener('click', ()=>{ const raw = localStorage.getItem(STORAGE_KEY) || '{}'; const a = document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(raw); a.download='fox_state_export.json'; a.click(); });
+const importJsonBtn = document.getElementById('importJsonBtn'); if(importJsonBtn) importJsonBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); const s = prompt('Pega JSON del estado para importar:'); if(!s) return; try{ localStorage.setItem(STORAGE_KEY, s); loadState(); alert('Importado'); }catch(e){ alert('JSON inválido'); } });
+
+const saveAllBtn = document.getElementById('saveAllBtn'); if(saveAllBtn) saveAllBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); saveState(); alert('Guardado'); });
+const loadAllBtn = document.getElementById('loadAllBtn'); if(loadAllBtn) loadAllBtn.addEventListener('click', ()=>{ if(!ownerMode) return alert('Activa Owner Mode'); loadState(); alert('Cargado'); });
+
+/* ===========
+   Zone2 overlay controls + init
+   =========== */
+const enterZoneBtn = document.getElementById('enterZoneBtn'); if(enterZoneBtn) enterZoneBtn.addEventListener('click', ()=>{ document.getElementById('zone2').classList.add('open'); loadZonesIntoOverlay(); });
+const zone2Back = document.getElementById('zone2Back'); if(zone2Back) zone2Back.addEventListener('click', ()=>{ document.getElementById('zone2').classList.remove('open'); });
+function loadZonesIntoOverlay(){ const container = document.getElementById('zoneContainerInner'); container.innerHTML = ''; zones.forEach(z=>{ const clone = document.createElement('div'); clone.innerHTML = `<div style="font-weight:800">${z.title}</div><div style="color:var(--muted)">${z.contentHTML||''}</div><div style="height:10px"></div>`; container.appendChild(clone); }); }
+
+/* ===========
+   Appear observer & initial boot
+   =========== */
+function setupAppearOnScrollObserver(){ if(appearObserver) appearObserver.disconnect(); appearObserver = new IntersectionObserver(entries=>{ entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.remove('appear-hidden'); en.target.classList.add('appear-visible'); } }); }, {threshold:0.2}); document.querySelectorAll('[data-appear="true"]').forEach(el=>{ el.classList.add('appear-hidden'); appearObserver.observe(el); }); }
+
+window.addEventListener('load', ()=>{
+  loadState();
+  rewireAllButtons();
+  setupAppearOnScrollObserver();
+  populateAllZoneSelectors();
+  document.querySelectorAll('.deviceBtn').forEach(b=>b.addEventListener('click', ()=>{ document.querySelectorAll('.deviceBtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }));
+});
+
+/* expose for debugging */
+window._fox = { saveState, loadState, createZone, zones, navigateToZone, openGlobalModal, getImage: ()=>localStorage.getItem(IMAGE_KEY) };
+
+</script>
+</body>
+</html>
